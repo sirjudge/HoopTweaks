@@ -1,27 +1,31 @@
-using HoopTweaks.Quest;
+using Guid = System.Guid;
+using HoopTweaks.Infrastructure;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-using Vintagestory.API.Datastructures;
 
 namespace HoopTweaks;
 
-public class HoopTweaksClient
+public class HoopTweaksClient : IHoopClientCommand
 {
-    private readonly ICoreClientAPI _api;
     private readonly ILogger _logger;
-    private readonly HoopTweaksModSystem _mod;
-    public ListDictionary<string, Quest.Quest>? _questCache { set; get; }
-
-    public HoopTweaksClient(HoopTweaksModSystem mod, ICoreClientAPI api)
+    private readonly ICoreClientAPI _api;
+    public System.Collections.Generic.Dictionary<Guid, Quest.Quest>? QuestCache { set; get; }
+    public HoopTweaksClient(ICoreClientAPI api)
     {
-        _mod = mod;
+
         _api = api;
-        _logger = mod.Mod.Logger;
+        _logger = api.Logger;
         _logger.Debug("Initialized client logger for hoop tweaks client");
     }
 
-    public void Dispose()
+    public override void RegisterClientCommands()
     {
-        _questCache = null;
+        _logger.Debug("Successfully registered client commands");
+    }
+
+    public override void Dispose()
+    {
+        QuestCache = null;
+        _logger.Debug("Successfully disposed hoops tweaks client");
     }
 }

@@ -7,6 +7,7 @@ namespace HoopTweaks;
 
 public class HoopTweaksModSystem : ModSystem
 {
+    private bool _disposing;
     private HoopTweaksClient? _client;
     private HoopTweaksServer? _server;
 
@@ -20,19 +21,28 @@ public class HoopTweaksModSystem : ModSystem
     public override void StartServerSide(ICoreServerAPI api)
     {
         Mod.Logger.Notification("Hello from template mod server side: " + Lang.Get("hooptweaks:hello"));
-        _server = new HoopTweaksServer(this, api);
+        _server = new HoopTweaksServer(this,api);
+        _server.RegisterServerCommands();
     }
 
     public override void StartClientSide(ICoreClientAPI api)
     {
-        _client = new HoopTweaksClient(this, api);
+        _client = new HoopTweaksClient(api);
+        _client.RegisterClientCommands();
     }
 
     public override void Dispose() {
+        if (_disposing){
+            return;
+        }
+        _disposing = true;
+
         _client?.Dispose();
         _client = null;
 
         _server?.Dispose();
         _server = null;
+
+        _disposing = false;
     }
 }

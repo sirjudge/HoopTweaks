@@ -48,12 +48,9 @@ public sealed class ValidateJsonTask : FrostingTask<BuildContext>
 {
     public override void Run(BuildContext context)
     {
-        if (context.SkipJsonValidation)
-        {
-            return;
-        }
-        var jsonFiles = context.GetFiles($"../{BuildContext.ProjectName}/assets/**/*.json");
-        foreach (var file in jsonFiles)
+        if (context.SkipJsonValidation) return;
+
+        foreach (var file in context.GetFiles($"../{BuildContext.ProjectName}/assets/**/*.json"))
         {
             try
             {
@@ -114,6 +111,4 @@ public sealed class PackageTask : FrostingTask<BuildContext>
 
 [TaskName("Default")]
 [IsDependentOn(typeof(PackageTask))]
-public class DefaultTask : FrostingTask
-{
-}
+public class DefaultTask : FrostingTask;
