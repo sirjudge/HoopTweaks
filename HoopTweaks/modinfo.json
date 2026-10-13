@@ -3,12 +3,15 @@
     "type": "Code",
     "modid": "hooptweaks",
     "name": "HoopTweaks",
+    "side": "universal",
+    "requiredOnClient": true,
+    "requiredOnServer": true,
     "authors": [
-        "Nico 'Old Man' Judge"
+        "Old Man Judge"
     ],
     "description": "A collection of enhancements and additions to the base game to add whimsy and vigor to things",
-    "version": "1.0.0",
+    "version": "0.1.0",
     "dependencies": {
-        "game": "1.21.0"
+        "game": "1.22.7"
     }
 }

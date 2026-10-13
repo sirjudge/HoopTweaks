@@ -5,7 +5,7 @@ using Vintagestory.API.Server;
 
 namespace HoopTweaks.Quest;
 
-public class QuestServerCommand : IHoopServerCommand
+public class HoopsQuestSystem : IHoopServerSystem
 {
     private ICoreServerAPI ServerApi { set; get; }
     private QuestBook? QuestBook { set; get; }
@@ -13,13 +13,22 @@ public class QuestServerCommand : IHoopServerCommand
     public override void StartServerSide(ICoreServerAPI api)
     {
         ServerApi = api;
-        QuestBook.RefreshQuestDictionary();
+        //BUG: Something with these three lines is borking things 
+        // InitalizeQuestbook();
+        // QuestBook.RefreshQuestDictionary();
+        // RegisterServerCommands();
+    }
+
+    internal void InitalizeQuestbook(){
+        if (QuestBook is not null) return;
+
+        QuestBook = new QuestBook(ServerApi);
     }
 
     public override void RegisterServerCommands()
     {
         ServerApi.Logger.Debug("Registering server commands");
-        ServerApi.ChatCommands.Create("quest")
+        ServerApi.ChatCommands.Create("hoopQuest")
             .WithDescription("adds new quest to quest list")
             .RequiresPrivilege(Privilege.chat)
             .WithArgs(ServerApi.ChatCommands.Parsers.Word("cmd", ["add", "remove","list"]))
@@ -45,7 +54,6 @@ public class QuestServerCommand : IHoopServerCommand
             );
     }
 
-    //TODO: Need to come back and actually implement this but this fine for now
     public Quest ParseQuestFromArgs(TextCommandCallingArgs args){
         if (args.ArgCount <= 0){
             ServerApi.Logger.Error("Could not parse quest arugments, argument count is 0, returning fake test instead");
@@ -62,6 +70,10 @@ public class QuestServerCommand : IHoopServerCommand
 
     public override void Dispose()
     {
-        ServerApi.Logger.Debug("Disposed Quest Server Command");
+        if (ServerApi is not null){
+            ServerApi.Logger.Debug("Disposed Quest Server Command");
+            ServerApi = null;
+        }
+
     }
 }

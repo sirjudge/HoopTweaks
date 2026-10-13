@@ -4,36 +4,32 @@ using Vintagestory.API.Server;
 
 namespace HoopTweaks;
 
-public class HoopTweaksServer : IHoopServerCommand
+public class HoopTweaksServer : IHoopSystem
 {
     private bool _disposing;
-    private readonly HoopTweaksModSystem _mod;
-    public ICoreServerAPI Sapi { get; }
+    public ICoreServerAPI Sapi { set; get; }
 
-    public string ModId => _mod.Mod.Info.ModID;
-
-    public string ModVersion => _mod.Mod.Info.Version;
-
-    public HoopTweaksServer(HoopTweaksModSystem mod, ICoreServerAPI api)
+    public override void StartServerSide(ICoreServerAPI api)
     {
         Sapi = api;
-        _mod = mod;
-        Sapi.Logger.Debug("initialized hoops tweak server");
+        RegisterServerCommands();
     }
 
-    public override void RegisterServerCommands()
+    public void RegisterServerCommands()
     {
         Sapi.Logger.Debug("Registering server command");
-        Sapi.ChatCommands
-            .Create("testServer")
+        Sapi.ChatCommands.Create("testServer")
             .WithDescription("test server command")
             .WithAlias("ts")
-            .HandleWith((args) => {
-                int argCount = args.ArgCount;
-                Sapi.Logger.Debug($"Arg Count: {argCount}");
-                Sapi.Logger.Debug($"Args: {args}");
-                return TextCommandResult.Success();
-            });
+            .HandleWith(
+                (args) =>
+                {
+                    int argCount = args.ArgCount;
+                    Sapi.Logger.Debug($"Arg Count: {argCount}");
+                    Sapi.Logger.Debug($"Args: {args}");
+                    return TextCommandResult.Success();
+                }
+            );
     }
 
     public override void Dispose()
@@ -44,7 +40,6 @@ public class HoopTweaksServer : IHoopServerCommand
         }
 
         _disposing = true;
-        Sapi.Logger.Debug("Disposed Hoop Tweaks server");
         _disposing = false;
     }
 }

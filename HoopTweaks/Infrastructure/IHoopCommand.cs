@@ -2,17 +2,17 @@ using Vintagestory.API.Common;
 
 namespace HoopTweaks.Infrastructure;
 
-public abstract class IHoopCommand : ModSystem
+public abstract class IHoopSystem : ModSystem
 {
     public override abstract void Dispose();
 }
 
-public abstract class IHoopServerCommand : IHoopCommand
+public abstract class IHoopServerSystem : IHoopSystem
 {
     public abstract void RegisterServerCommands();
 }
 
-public abstract class IHoopClientCommand : IHoopCommand
+public abstract class IHoopClientSystem : IHoopSystem
 {
     public abstract void RegisterClientCommands();
 }
