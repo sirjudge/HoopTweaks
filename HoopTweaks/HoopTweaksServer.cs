@@ -18,9 +18,11 @@ public class HoopTweaksServer : IHoopSystem
     public void RegisterServerCommands()
     {
         Sapi.Logger.Debug("Registering server command");
-        Sapi.ChatCommands.Create("testServer")
+        Sapi.ChatCommands
+            .Create("hoopDebug")
             .WithDescription("test server command")
-            .WithAlias("ts")
+            .WithAlias("hd")
+            .RequiresPrivilege(Privilege.chat)
             .HandleWith(
                 (args) =>
                 {

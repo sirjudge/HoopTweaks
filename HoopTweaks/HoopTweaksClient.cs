@@ -25,9 +25,11 @@ public class HoopTweaksClient : IHoopClientSystem
     {
         TranslationService? translationService = new("en", Logger);
         Logger?.Debug("Successfully registered client commands");
-        Api?.ChatCommands.Create("hoop")
+        Api?.ChatCommands
+            .Create("hoop")
             .WithDescription("commands used to interact with the hoop mod")
             .WithArgs(Api.ChatCommands.Parsers.Word("cmd", ["kerchow", "affirmation"]))
+            .RequiresPlayer()
             .HandleWith(
                 (args) =>
                 {
@@ -35,7 +37,10 @@ public class HoopTweaksClient : IHoopClientSystem
                     switch (args[0] as string)
                     {
                         case "kerchow":
-                            var kerchowLocation = new AssetLocation("hoopeffects","sounds/vroomeffect");
+                            var kerchowLocation = new AssetLocation(
+                                "hoopeffects",
+                                "sounds/vroomeffect"
+                            );
                             var byEntity = args.Caller.Entity;
                             byEntity.World.PlaySoundAt(kerchowLocation, byEntity);
                             Api.TriggerIngameDiscovery(player, "not error text", "kerchow");
@@ -54,14 +59,14 @@ public class HoopTweaksClient : IHoopClientSystem
                                 Logger?.Error(
                                     $"Ran into exception translating affirmation with key:{affirmationkey} and exception:{ex}"
                                 );
+                                Api.TriggerIngameDiscovery(
+                                    player,
+                                    "translation service failed",
+                                    "love you dawg <3"
+                                );
                             }
-                            Api.TriggerIngameDiscovery(
-                                player,
-                                "translation service failed",
-                                "love you dawg <3"
-                            );
                             break;
-                        case "help":
+                        default:
                             Api.Logger.Chat(".hoops [kerchow|affirmation|help]");
                             break;
                     }
@@ -69,6 +74,7 @@ public class HoopTweaksClient : IHoopClientSystem
                 }
             );
     }
+
     public override void Dispose()
     {
         QuestCache = null;
