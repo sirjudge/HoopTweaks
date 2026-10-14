@@ -1,4 +1,5 @@
 using System;
+using HoopTweaks.Infrastructure;
 using Microsoft.Data.Sqlite;
 using Guid = System.Guid;
 
@@ -12,6 +13,11 @@ public enum QuestStatus {
     Complete = 4
 }
 
+//TODO: Need to fill these two out with protobuff and such
+public class QuestMessage : HoopMessage {}
+public class QuestRequest : HoopRequest {}
+
+
 public class Quest
 {
     public Guid Id { init; get; } = Guid.NewGuid();
@@ -24,7 +30,6 @@ public class Quest
         Description = description;
         QuestStatus = questStatus;
     }
-
     public QuestStatus ParseStatus(int statusInt)
         => statusInt switch
         {

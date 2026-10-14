@@ -20,10 +20,10 @@ public class QuestDatabase : HoopDatabase
     {
         const string sqliteQuery = """
             create table quests(
-                TEXT id,
-                INT status,
-                TEXT title,
-                TEXT description
+                id TEXT,
+                status INT,
+                title TEXT,
+                description TEXT
             );
             """;
         var command = Connection.CreateCommand();

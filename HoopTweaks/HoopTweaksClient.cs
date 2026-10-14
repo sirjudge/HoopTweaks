@@ -32,11 +32,22 @@ public class HoopTweaksClient : IHoopClientSystem
             .HandleWith(
                 (args) =>
                 {
-                    var onlinePlayersString = "test user 1, test user 2";
-                    Api.ShowChatMessage($"The following people are online:{onlinePlayersString}");
+                    var onlinePlayersString = string.Join(",",  Api.World.AllOnlinePlayers);
+                    var outputString = $"The following people are online:{onlinePlayersString}";
+                    Api.ShowChatMessage(outputString);
+                    Logger.Debug(outputString);
                     return TextCommandResult.Success();
                 }
             );
+
+        /*
+         14.10.2026 12:17:49 [Error] Ran into exception translating affirmation with key:affirmation-6 and exception:System.ArgumentNullException: Value cannot be null. (Parameter 'source')
+         at System.Linq.ThrowHelper.ThrowArgumentNullException(ExceptionArgument argument)
+         at System.Linq.Enumerable.SelectMany[TSource,TResult](IEnumerable`1 source, Func`2 selector)
+         at Vintagestory.API.Config.TranslationService.Load(Boolean lazyLoad) in C:\Users\office-desktop2\Documents\game\VintagestoryApi\Localization\TranslationService.cs:line 80
+         at Vintagestory.API.Config.TranslationService.Get(String key, Object[] args) in C:\Users\office-desktop2\Documents\game\VintagestoryApi\Localization\TranslationService.cs:line 463
+         at HoopTweaks.HoopTweaksClient.<>c__DisplayClass13_0.<RegisterClientCommands>b__1(TextCommandCallingArgs args) in /home/nico/solutions/vintageStory/HoopTweaks/HoopTweaks/HoopTweaksClient.cs:line 72
+         */
 
         Api?.ChatCommands.Create("hoop")
             .WithDescription("commands used to interact with the hoop mod")
@@ -70,11 +81,6 @@ public class HoopTweaksClient : IHoopClientSystem
                             {
                                 Logger?.Error(
                                     $"Ran into exception translating affirmation with key:{affirmationkey} and exception:{ex}"
-                                );
-                                Api.TriggerIngameDiscovery(
-                                    player,
-                                    "translation service failed",
-                                    "love you dawg <3"
                                 );
                             }
                             break;

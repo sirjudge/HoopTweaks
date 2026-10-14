@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using HoopTweaks.Infrastructure;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
@@ -11,7 +12,6 @@ namespace HoopTweaks.Quest;
 // https://wiki.vintagestory.at/Modding:SaveGame_ModData
 public class QuestBook(ICoreServerAPI api)
 {
-    private ICoreServerAPI Api { init; get; } = api;
     private ILogger Logger { init; get; } = api.Logger;
     private Dictionary<Guid, Quest> _questDictionary = [];
     public Dictionary<Guid, Quest> QuestDictionary
@@ -32,7 +32,7 @@ public class QuestBook(ICoreServerAPI api)
             }
 
             _questDictionary = value;
-            Logger.Audit("Added new Quest to quest book:{_questDictionary}");
+            Logger.Audit($"Added new Quest to quest book:{this}");
         }
     }
 
@@ -81,25 +81,32 @@ public class QuestBook(ICoreServerAPI api)
     /// list and refreshes the internal data with the latest
     /// </summary>
     /// <returns>true if successful and false if failure occurred</returns>
-    public bool RefreshQuestDictionary()
+    public QueryEvent RefreshQuestDictionary()
     {
         try
         {
-            using (var databse = new QuestDatabase(Logger)){
-                QuestDictionary = databse.GetAllQuests();
-            }
+            using var databse = new QuestDatabase(Logger);
+            QuestDictionary = databse.GetAllQuests();
         }
         catch (Exception e)
         {
             Logger.Error(
                 $"Exception occurred trying to refresh the quest dictionary:{e.Message} {e.StackTrace}"
             );
+            return new QueryEvent(false, "RefreshQuestDictionary", string.Empty);
         }
-        return true;
+
+        return new QueryEvent(false, "RefreshQuestDictionary", string.Empty);
     }
 
     public override string ToString()
     {
+        if (QuestDictionary is null)
+            return "Quest book is null";
+        else if (QuestDictionary.Count == 0)
+            return "Quest book is empty";
+
+
         StringBuilder outputStringBuilder = new(
             $"Quest book has {QuestDictionary.Count} Keys. {Environment.NewLine}"
         );
@@ -112,5 +119,4 @@ public class QuestBook(ICoreServerAPI api)
 
         return outputStringBuilder.ToString();
     }
-
 }

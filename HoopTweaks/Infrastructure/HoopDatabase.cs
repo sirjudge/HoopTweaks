@@ -23,9 +23,6 @@ public class HoopDatabase : IDisposable
         }
     }
 
-    internal int GetOrdinalFromColumnName(string columnname, SqliteDataReader reader)
-        => reader.GetOrdinal(columnname);
-
     public void Dispose()
     {
         if (_disposing) return;
