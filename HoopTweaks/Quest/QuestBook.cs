@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using HoopTweaks.Infrastructure;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 
@@ -43,19 +42,12 @@ public class QuestBook(ICoreServerAPI api)
             return;
         }
         _questDictionary.Add(quest.Id, quest);
-        Save();
-        Logger.Audit($"Quest saved:{quest}");
-
-    }
-
-    private void InializeQuestDb(){
-
-    }
-    private void Save(){
         Logger.Audit($"Questbook saved:{this}");
         using (var databse = new QuestDatabase(Logger)){
-            //TODO: Save quest here
+            databse.SaveQuestToDatabase(quest);
         }
+        Logger.Audit($"Quest saved:{quest}");
+
     }
 
     /// <summary>
@@ -94,7 +86,7 @@ public class QuestBook(ICoreServerAPI api)
         try
         {
             using (var databse = new QuestDatabase(Logger)){
-                //TODO: Read quest here 
+                QuestDictionary = databse.GetAllQuests();
             }
         }
         catch (Exception e)

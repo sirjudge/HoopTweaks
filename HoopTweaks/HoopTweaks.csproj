@@ -8,6 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Reference Include="Microsoft.Data.Sqlite">
+      <HintPath>..\..\..\..\..\..\opt\vintagestory\Lib\Microsoft.Data.Sqlite.dll</HintPath>
+    </Reference>
     <Reference Include="VintagestoryAPI">
 <!--      <HintPath>$(VINTAGE_STORY)/VintagestoryAPI.dll</HintPath>-->
       <HintPath>/opt/vintagestory/VintagestoryAPI.dll</HintPath>
@@ -52,11 +55,6 @@
       <HintPath>/opt/vintagestory/Lib/cairo-sharp.dll</HintPath>
       <Private>False</Private>
     </Reference>
-    <Reference Include="Microsoft.Data.Sqlite">
-<!--      <HintPath>$(VINTAGE_STORY)/Lib/Microsoft.Data.Sqlite.dll</HintPath>-->
-      <HintPath>/opt/vintagestory/Microsoft.Data.Sqlite.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
   </ItemGroup>
 
 <ItemGroup>
@@ -69,10 +67,6 @@
   <Content Include="modicon.png" Condition="Exists('modicon.png')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
   </Content>
-</ItemGroup>
-
-<ItemGroup>
-  <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
 </ItemGroup>
 
 </Project>
