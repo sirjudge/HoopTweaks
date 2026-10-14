@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.Text;
+using HoopTweaks.Infrastructure;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
-using Vintagestory.API.Util;
 
 namespace HoopTweaks.Quest;
+
 
 // Handle saving and loading quests using this tutorial
 // https://wiki.vintagestory.at/Modding:SaveGame_ModData
@@ -13,14 +14,17 @@ public class QuestBook(ICoreServerAPI api)
 {
     private ICoreServerAPI Api { init; get; } = api;
     private ILogger Logger { init; get; } = api.Logger;
-
     private Dictionary<Guid, Quest> _questDictionary = [];
-
     public Dictionary<Guid, Quest> QuestDictionary
     {
         get => _questDictionary;
         set
         {
+            if (value is null){
+                value = [];
+                Logger.Audit("Attempting to set quest dictionary to null");
+            }
+
             if (value.Count == 0)
             {
                 Logger.Warning(
@@ -28,17 +32,30 @@ public class QuestBook(ICoreServerAPI api)
                 );
             }
 
-            _questDictionary = value ?? [];
+            _questDictionary = value;
+            Logger.Audit("Added new Quest to quest book:{_questDictionary}");
         }
     }
 
-    /// <summary>
-    /// Saves the current quest to the save and also runs an async quest refresh
-    /// </summary>
-    public void SaveQuest(Quest quest)
-    {
-        var questByteArray = quest.ToByteArray();
-        Logger.Debug($"Saving Quest:{quest} questByte:{questByteArray}");
+    public void AddQuest(Quest quest){
+        if (QuestDictionary.ContainsKey(quest.Id)){
+            Logger.Warning($"Quest already added to quest book, bailing early. Quest:{quest}");
+            return;
+        }
+        _questDictionary.Add(quest.Id, quest);
+        Save();
+        Logger.Audit($"Quest saved:{quest}");
+
+    }
+
+    private void InializeQuestDb(){
+
+    }
+    private void Save(){
+        Logger.Audit($"Questbook saved:{this}");
+        using (var databse = new QuestDatabase(Logger)){
+            //TODO: Save quest here
+        }
     }
 
     /// <summary>
@@ -46,7 +63,6 @@ public class QuestBook(ICoreServerAPI api)
     /// </summary>
     public Quest? GetQuest(Guid questId)
     {
-        Logger.Debug($"Loading Quest Id:{questId}");
         if (QuestDictionary is null)
         {
             Logger.Warning(
@@ -60,8 +76,12 @@ public class QuestBook(ICoreServerAPI api)
             Logger.Error(
                 $"Currently loaded Quest book does not have the quest Id listed:{questId}"
             );
+            return null;
         }
-        return QuestDictionary.Get(questId);
+
+        var returnQuest = QuestDictionary[questId];
+        Logger.Audit($"queried Quest Dictionary:{returnQuest}");
+        return  returnQuest;
     }
 
     /// <summary>
@@ -71,10 +91,11 @@ public class QuestBook(ICoreServerAPI api)
     /// <returns>true if successful and false if failure occurred</returns>
     public bool RefreshQuestDictionary()
     {
-        QuestDictionary ??= [];
         try
         {
-            byte[] data = Api.WorldManager.SaveGame.GetData("questbook");
+            using (var databse = new QuestDatabase(Logger)){
+                //TODO: Read quest here 
+            }
         }
         catch (Exception e)
         {
@@ -84,4 +105,20 @@ public class QuestBook(ICoreServerAPI api)
         }
         return true;
     }
+
+    public override string ToString()
+    {
+        StringBuilder outputStringBuilder = new(
+            $"Quest book has {QuestDictionary.Count} Keys. {Environment.NewLine}"
+        );
+
+        foreach (KeyValuePair<Guid, Quest> questPair in QuestDictionary)
+        {
+            var quest = questPair.Value;
+            outputStringBuilder.Append($"QuestId:{questPair.Key} Quest title: {quest.Title}");
+        }
+
+        return outputStringBuilder.ToString();
+    }
+
 }

@@ -1,3 +1,4 @@
+#nullable disable
 using System;
 using HoopTweaks.Infrastructure;
 using Vintagestory.API.Common;
@@ -5,18 +6,20 @@ using Vintagestory.API.Server;
 
 namespace HoopTweaks.Quest;
 
-public class HoopsQuestSystem : IHoopServerSystem
+public class HoopsQuestServerSystem : IHoopServerSystem
 {
     private ICoreServerAPI ServerApi { set; get; }
-    private QuestBook? QuestBook { set; get; }
+    private QuestBook QuestBook { set; get; }
+    private bool _disposing;
 
     public override void StartServerSide(ICoreServerAPI api)
     {
         ServerApi = api;
-        ServerApi.Logger.Debug("Initializing QuestBook");
         try
         {
             InitalizeQuestbook();
+            ServerApi.Logger.Audit("initialized QuestBook");
+            ServerApi.Logger.Audit(QuestBook.ToString());
             RegisterServerCommands();
         }
         catch (Exception ex)
@@ -52,21 +55,22 @@ public class HoopsQuestSystem : IHoopServerSystem
             .ChatCommands.Create("hoopQuest")
             .WithDescription("adds new quest to quest list")
             .RequiresPrivilege(Privilege.chat)
-            .WithArgs(ServerApi.ChatCommands.Parsers.Word("cmd", ["add", "remove", "list"]))
+            .WithArgs(ServerApi.ChatCommands.Parsers.Word("cmd", ["add", "list"]))
             .HandleWith(
                 (args) =>
                 {
                     string argsString = string.Join(',', args);
                     switch (args[0] as string)
                     {
+                        //TODO: Should eventually come back  and change this to better paramaterize 
+                        //but fine to use generative test for now
                         case "add":
-                            ServerApi.Logger.Debug($"Adding new quest to list. Args: {argsString}");
-                            break;
-                        case "remove":
-                            ServerApi.Logger.Debug($"removing mod from list list. Args:{argsString}");
+                            var questToAdd = GenerateTestQuest();
+                            QuestBook.AddQuest(questToAdd);
+                            ServerApi.Logger.Audit($"Added new quest to list. Args: {questToAdd}");
                             break;
                         case "list":
-                            ServerApi.Logger.Debug($"list of all registered quests. Args:{argsString}");
+                            ServerApi.Logger.Audit($"list of all registered quests. Quest List:{QuestBook}");
                             break;
                         default:
                             return TextCommandResult.Error($"/quest [add|remove|list].Args:{argsString}");
@@ -74,18 +78,6 @@ public class HoopsQuestSystem : IHoopServerSystem
                     return TextCommandResult.Success();
                 }
             );
-    }
-
-    public Quest ParseQuestFromArgs(TextCommandCallingArgs args)
-    {
-        if (args.ArgCount <= 0)
-        {
-            ServerApi.Logger.Error(
-                "Could not parse quest arugments, argument count is 0, returning fake test instead"
-            );
-        }
-
-        return GenerateTestQuest();
     }
 
     public Quest GenerateTestQuest()
@@ -98,10 +90,12 @@ public class HoopsQuestSystem : IHoopServerSystem
 
     public override void Dispose()
     {
-        if (ServerApi is not null)
-        {
-            ServerApi.Logger.Debug("Disposed Quest Server Command");
-            ServerApi = null;
-        }
+        if (_disposing)
+            return;
+
+        _disposing = true;
+        QuestBook = null;
+        ServerApi = null;
+        _disposing = false;
     }
 }

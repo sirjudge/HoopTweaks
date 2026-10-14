@@ -25,8 +25,20 @@ public class HoopTweaksClient : IHoopClientSystem
     {
         TranslationService? translationService = new("en", Logger);
         Logger?.Debug("Successfully registered client commands");
-        Api?.ChatCommands
-            .Create("hoop")
+
+        Api?.ChatCommands.Create("whoUp")
+            .WithDescription("lists out who is currently online")
+            .RequiresPlayer()
+            .HandleWith(
+                (args) =>
+                {
+                    var onlinePlayersString = "test user 1, test user 2";
+                    Api.ShowChatMessage($"The following people are online:{onlinePlayersString}");
+                    return TextCommandResult.Success();
+                }
+            );
+
+        Api?.ChatCommands.Create("hoop")
             .WithDescription("commands used to interact with the hoop mod")
             .WithArgs(Api.ChatCommands.Parsers.Word("cmd", ["kerchow", "affirmation"]))
             .RequiresPlayer()

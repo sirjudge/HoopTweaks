@@ -1,3 +1,4 @@
+using System;
 using HoopTweaks.Infrastructure;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
@@ -7,28 +8,34 @@ namespace HoopTweaks;
 public class HoopTweaksServer : IHoopSystem
 {
     private bool _disposing;
-    public ICoreServerAPI Sapi { set; get; }
+    public ICoreServerAPI? ServerApi { get; set; }
+
+    public ILogger? Logger { get; set; }
 
     public override void StartServerSide(ICoreServerAPI api)
     {
-        Sapi = api;
+        ServerApi = api;
         RegisterServerCommands();
     }
 
     public void RegisterServerCommands()
     {
-        Sapi.Logger.Debug("Registering server command");
-        Sapi.ChatCommands
-            .Create("hoopDebug")
+        if (ServerApi is null)
+        {
+            throw new NullReferenceException(
+                "Server Api should have already been initialized at this point"
+            );
+        }
+
+        ServerApi
+            .ChatCommands.Create("hoopDebug")
             .WithDescription("test server command")
             .WithAlias("hd")
             .RequiresPrivilege(Privilege.chat)
             .HandleWith(
                 (args) =>
                 {
-                    int argCount = args.ArgCount;
-                    Sapi.Logger.Debug($"Arg Count: {argCount}");
-                    Sapi.Logger.Debug($"Args: {args}");
+                    ServerApi.Logger.Debug("HoopDebug check. Status: Healhty");
                     return TextCommandResult.Success();
                 }
             );
@@ -42,6 +49,8 @@ public class HoopTweaksServer : IHoopSystem
         }
 
         _disposing = true;
+        Logger = null;
+        ServerApi = null;
         _disposing = false;
     }
 }
