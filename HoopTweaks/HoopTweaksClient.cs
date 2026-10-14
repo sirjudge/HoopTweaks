@@ -3,6 +3,7 @@ using HoopTweaks.Infrastructure;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
+using Vintagestory.Common;
 using Guid = System.Guid;
 
 namespace HoopTweaks;
@@ -23,7 +24,12 @@ public class HoopTweaksClient : IHoopClientSystem
 
     public override void RegisterClientCommands()
     {
-        TranslationService? translationService = new("en", Logger);
+        // TranslationService? translationService = new("en", Logger);
+        TranslationService? translationService = new TranslationService(
+            "en",
+            Logger,
+            new AssetManager("hooptweaks", EnumAppSide.Universal)
+        );
         Logger?.Debug("Successfully registered client commands");
 
         Api?.ChatCommands.Create("whoUp")
@@ -32,7 +38,7 @@ public class HoopTweaksClient : IHoopClientSystem
             .HandleWith(
                 (args) =>
                 {
-                    var onlinePlayersString = string.Join(",",  Api.World.AllOnlinePlayers);
+                    var onlinePlayersString = string.Join(",", Api.World.AllOnlinePlayers);
                     var outputString = $"The following people are online:{onlinePlayersString}";
                     Api.ShowChatMessage(outputString);
                     Logger.Debug(outputString);
@@ -70,17 +76,17 @@ public class HoopTweaksClient : IHoopClientSystem
                             break;
                         case "affirmation":
                             //TODO: Need to add fun particles to this
-                            //https://wiki.vintagestory.at/Modding:Simple_Particles
+                            //https://wiki.vintagery.at/Modding:Simple_Particles
                             string affirmationkey = $"affirmation-{new Random().Next(0, 10)}";
                             try
                             {
-                                string affirmation = translationService.Get(affirmationkey);
-                                Api.TriggerIngameDiscovery(player, "error text", affirmation);
+                                var affirmationText = Lang.Get($"hooptweaks:{affirmationkey}");
+                                Api.TriggerIngameDiscovery(player, "error text", affirmationText);
                             }
                             catch (Exception ex)
                             {
                                 Logger?.Error(
-                                    $"Ran into exception translating affirmation with key:{affirmationkey} and exception:{ex}"
+                                    $"Ran into exception translating affirmation with key:{affirmationkey} and exception:{ex.Message} and stacktrace: {ex.StackTrace}"
                                 );
                             }
                             break;
