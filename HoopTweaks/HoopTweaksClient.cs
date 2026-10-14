@@ -3,7 +3,7 @@ using HoopTweaks.Infrastructure;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
-using Vintagestory.Common;
+using Vintagestory.API.MathTools;
 using Guid = System.Guid;
 
 namespace HoopTweaks;
@@ -24,36 +24,7 @@ public class HoopTweaksClient : IHoopClientSystem
 
     public override void RegisterClientCommands()
     {
-        // TranslationService? translationService = new("en", Logger);
-        TranslationService? translationService = new TranslationService(
-            "en",
-            Logger,
-            new AssetManager("hooptweaks", EnumAppSide.Universal)
-        );
         Logger?.Debug("Successfully registered client commands");
-
-        Api?.ChatCommands.Create("whoUp")
-            .WithDescription("lists out who is currently online")
-            .RequiresPlayer()
-            .HandleWith(
-                (args) =>
-                {
-                    var onlinePlayersString = string.Join(",", Api.World.AllOnlinePlayers);
-                    var outputString = $"The following people are online:{onlinePlayersString}";
-                    Api.ShowChatMessage(outputString);
-                    Logger.Debug(outputString);
-                    return TextCommandResult.Success();
-                }
-            );
-
-        /*
-         14.10.2026 12:17:49 [Error] Ran into exception translating affirmation with key:affirmation-6 and exception:System.ArgumentNullException: Value cannot be null. (Parameter 'source')
-         at System.Linq.ThrowHelper.ThrowArgumentNullException(ExceptionArgument argument)
-         at System.Linq.Enumerable.SelectMany[TSource,TResult](IEnumerable`1 source, Func`2 selector)
-         at Vintagestory.API.Config.TranslationService.Load(Boolean lazyLoad) in C:\Users\office-desktop2\Documents\game\VintagestoryApi\Localization\TranslationService.cs:line 80
-         at Vintagestory.API.Config.TranslationService.Get(String key, Object[] args) in C:\Users\office-desktop2\Documents\game\VintagestoryApi\Localization\TranslationService.cs:line 463
-         at HoopTweaks.HoopTweaksClient.<>c__DisplayClass13_0.<RegisterClientCommands>b__1(TextCommandCallingArgs args) in /home/nico/solutions/vintageStory/HoopTweaks/HoopTweaks/HoopTweaksClient.cs:line 72
-         */
 
         Api?.ChatCommands.Create("hoop")
             .WithDescription("commands used to interact with the hoop mod")
@@ -63,23 +34,49 @@ public class HoopTweaksClient : IHoopClientSystem
                 (args) =>
                 {
                     var player = args.Caller.Player;
+                    var byEntity = args.Caller.Entity;
                     switch (args[0] as string)
                     {
+                        case "whoUp":
+                            var onlinePlayersString = string.Join(",", Api.World.AllOnlinePlayers);
+                            var outputString =
+                                $"The following people are online:{onlinePlayersString}";
+                            Api.ShowChatMessage(outputString);
+                            Logger.Debug(outputString);
+                            break;
                         case "kerchow":
                             var kerchowLocation = new AssetLocation(
                                 "hoopeffects",
                                 "sounds/vroomeffect"
                             );
-                            var byEntity = args.Caller.Entity;
                             byEntity.World.PlaySoundAt(kerchowLocation, byEntity);
                             Api.TriggerIngameDiscovery(player, "not error text", "kerchow");
                             break;
                         case "affirmation":
-                            //TODO: Need to add fun particles to this
-                            //https://wiki.vintagery.at/Modding:Simple_Particles
                             string affirmationkey = $"affirmation-{new Random().Next(0, 10)}";
                             try
                             {
+                                Random _random = new();
+                                SimpleParticleProperties myParticles = new(
+                                        20,
+                                        40,
+                                        ColorUtil.ColorFromRgba(_random.Next(0, 255), _random.Next(0, 255), _random.Next(0, 255), 255),
+                                        new Vec3d(), //minpos
+                                        new Vec3d(), //maxpos
+                                        new Vec3f(1, 5, 1), // minVelocity
+                                        new Vec3f(-1, 10, -1), //maxVelocity
+                                        lifeLength: 10,
+                                        gravityEffect: (float)0.8,
+                                        minSize: 2,
+                                        maxSize: 5
+                                    )
+                                {
+                                    MinPos = byEntity
+                                        .Pos.XYZ.Add(0, byEntity.LocalEyePos.Y, 0)
+                                        .Ahead(2f, byEntity.Pos.Pitch, byEntity.Pos.Yaw),
+                                };
+                                byEntity.World.SpawnParticles(myParticles);
+
                                 var affirmationText = Lang.Get($"hooptweaks:{affirmationkey}");
                                 Api.TriggerIngameDiscovery(player, "error text", affirmationText);
                             }
