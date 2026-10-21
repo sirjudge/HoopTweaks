@@ -51,30 +51,78 @@ public class HoopsQuestServerSystem : IHoopServerSystem
     public override void RegisterServerCommands()
     {
         ServerApi.Logger.Debug("Registering server commands");
+        var questCommandParser = new QuestParser("hoopquest", true, ServerApi.Logger);
+
         ServerApi
-            .ChatCommands.Create("hoopQuest")
-            .WithDescription("adds new quest to quest list")
+            .ChatCommands.Create("hoopquestList")
+            .WithAlias("hql")
+            .WithDescription("list all current quests")
+            .WithExamples("/hoopquest list")
             .RequiresPrivilege(Privilege.chat)
-            .WithArgs(ServerApi.ChatCommands.Parsers.Word("cmd", ["add", "list"]))
+            .HandleWith(
+                (_) =>
+                {
+                    ServerApi.Logger.Audit(
+                        $"list of all registered quests. Quest List:{QuestBook}"
+                    );
+                    return TextCommandResult.Success();
+                }
+            );
+
+        ServerApi
+            .ChatCommands.Create("hoopquestAdd")
+            .WithAlias("hqa")
+            .WithDescription("adds new quest to quest list")
+            .WithExamples("/hoopquest add \"title\" \"super cool description\"")
+            .RequiresPrivilege(Privilege.chat)
+            .WithArgs([
+                ServerApi.ChatCommands.Parsers.WordRange("title"),
+                ServerApi.ChatCommands.Parsers.Word("description"),
+            ])
             .HandleWith(
                 (args) =>
                 {
-                    string argsString = string.Join(',', args);
-                    switch (args[0] as string)
+                    ServerApi.Logger.Debug(
+                        $"Args arg count:{args.ArgCount} parser count:{args.Parsers.Count}"
+                    );
+
+                    if (args.ArgCount == 2)
                     {
-                        //TODO: Should eventually come back  and change this to better paramaterize 
-                        //but fine to use generative test for now
-                        case "add":
-                            var questToAdd = GenerateTestQuest();
-                            QuestBook.AddQuest(questToAdd);
-                            ServerApi.Logger.Audit($"Added new quest to list. Args: {questToAdd}");
-                            break;
-                        case "list":
-                            ServerApi.Logger.Audit($"list of all registered quests. Quest List:{QuestBook}");
-                            break;
-                        default:
-                            return TextCommandResult.Error($"/quest [add|remove|list].Args:{argsString}");
+                        ServerApi.Logger.Debug(
+                            $"Expected 2 args but found {args.ArgCount} instead"
+                        );
                     }
+                    if (args.Parsers[0].IsMissing)
+                    {
+                        ServerApi.Logger.Debug("Title is missing");
+                    }
+                    if (args.Parsers[1].IsMissing)
+                    {
+                        ServerApi.Logger.Debug("description is missing");
+                    }
+
+                    bool failure = false;
+                    if (args.Parsers[0].TryProcess(args) != EnumParseResult.Good)
+                    {
+                        ServerApi.Logger.Error("enum parse result bad for add quest parser 0");
+                        failure = true;
+                    }
+
+                    if (args.Parsers[1].TryProcess(args) != EnumParseResult.Good)
+                    {
+                        ServerApi.Logger.Error("enum parse result bad for add quest parser 0");
+                        failure = true;
+                    }
+
+                    if (failure)
+                    {
+                        return TextCommandResult.Error("failed to parse something in quest add");
+                    }
+
+                    //TODO: Move this quest to ve added elsewhere
+                    var questToAdd = GenerateTestQuest();
+                    QuestBook.AddQuest(questToAdd);
+                    ServerApi.Logger.Audit($"Added new quest to list. Args: {questToAdd}");
                     return TextCommandResult.Success();
                 }
             );

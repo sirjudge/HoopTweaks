@@ -24,9 +24,10 @@ public class QuestParser : ArgumentParserBase
     }
 
     public override object GetValue()
-    {
-        throw new NotImplementedException();
-    }
+        => new {
+            QuestAction,
+            Quest
+        };
 
     public override void SetValue(object data)
     {
@@ -35,7 +36,7 @@ public class QuestParser : ArgumentParserBase
 
     public override EnumParseResult TryProcess(
         TextCommandCallingArgs args,
-        Action<AsyncParseResults> onReady = null
+        Action<AsyncParseResults>? onReady = null
     )
     {
         if (args.ArgCount == 0)
@@ -43,8 +44,9 @@ public class QuestParser : ArgumentParserBase
 
         for (int i = 0; i < args.ArgCount; i++){
             var arg = args[i];
+            Logger.Debug($"arg in quest parser:{arg}");
         }
-        return EnumParseResult.Good;
 
+        return EnumParseResult.Good;
     }
 }

@@ -47,7 +47,6 @@ public class QuestBook(ICoreServerAPI api)
             databse.SaveQuestToDatabase(quest);
         }
         Logger.Audit($"Quest saved:{quest}");
-
     }
 
     /// <summary>

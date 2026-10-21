@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using HoopTweaks.Infrastructure;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -18,14 +19,14 @@ public class HoopTweaksClient : IHoopClientSystem
     {
         Api = api;
         Logger = api.Logger;
-        Logger.Debug("Initialized client logger for hoop tweaks client");
         RegisterClientCommands();
     }
 
     public override void RegisterClientCommands()
     {
-        Logger?.Debug("Successfully registered client commands");
-
+        if (Logger is null) {
+            throw new NullReferenceException("Expected Logger to not be null when registering client commands");
+        }
         Api?.ChatCommands.Create("hoop")
             .WithDescription("commands used to interact with the hoop mod")
             .WithArgs(Api.ChatCommands.Parsers.Word("cmd", ["kerchow", "affirmation"]))
@@ -38,11 +39,17 @@ public class HoopTweaksClient : IHoopClientSystem
                     switch (args[0] as string)
                     {
                         case "whoUp":
+                            var playersOnline = Api.World.AllOnlinePlayers;
+                            StringBuilder onlinePlayersStringBuilder = new ("The following people are online");
+                            foreach (var onlinePlayer in playersOnline){
+                                onlinePlayersStringBuilder.Append($"{onlinePlayer.PlayerUID}:{onlinePlayer.PlayerName}");
+                            }
+
                             var onlinePlayersString = string.Join(",", Api.World.AllOnlinePlayers);
-                            var outputString =
-                                $"The following people are online:{onlinePlayersString}";
+
+                            var outputString = onlinePlayersStringBuilder.ToString();
                             Api.ShowChatMessage(outputString);
-                            Logger.Debug(outputString);
+                            Logger?.Audit($"Player {player.PlayerName} envoked whoup with command output:{outputString}");
                             break;
                         case "kerchow":
                             var kerchowLocation = new AssetLocation(
@@ -53,7 +60,7 @@ public class HoopTweaksClient : IHoopClientSystem
                             Api.TriggerIngameDiscovery(player, "not error text", "kerchow");
                             break;
                         case "affirmation":
-                            string affirmationkey = $"affirmation-{new Random().Next(0, 10)}";
+                            string affirmationkey = $"affirmation-{new Random().Next(0, 16)}";
                             try
                             {
                                 Random _random = new();
